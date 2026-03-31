@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Surat Jalan Barang - PLN</title>
+
+<link rel="icon" type="image/x-icon" href="pln.ico">
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+
+/* ================================
+   RESET TOTAL
+================================ */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html, body{
+    height:100%;
+}
+
+@page{
+    size:A4;
+    margin:0;
+}
+
+body{
+    background:#dcdcdc;
+    font-family:Arial, sans-serif;
+    font-size:12pt;
+    color:#000;
+    line-height:1.4;
+}
+
+/* ================================
+   KERTAS A4
+================================ */
+.paper{
+    width:210mm;
+    min-height:297mm;   /* FIX A4 */
+    background:#fff;
+    margin:0 auto;
+    padding:10mm 15mm 15mm 15mm;
+}
+/* ================================
+   HEADER
+================================ */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;   /* penting */
+    margin-bottom:5px;    /* kecilkan jarak bawah */
+}
+
+.logo-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.logo-title img{
+    width:55px;
+    height:55px;
+}
+
+.title-text{
+    font-size:12pt;
+    line-height:1.3;
+}
+
+/* ================================
+   KETERANGAN KANAN
+================================ */
+.tabel-ket{
+    border-collapse:collapse;
+    font-size:12pt;
+}
+.tabel-ket td{
+    border:none;
+    padding:0 3px;   /* hilangkan padding atas bawah */
+    line-height:1.1; /* rapatkan teks */
+}
+
+.kolom-kiri{ width:65px; }
+
+.kolon{
+    width:12px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.garis-kecil{
+    border-bottom:1px solid #000;
+    margin-top:0;
+}
+
+/* ================================
+   JUDUL
+================================ */
+.judul{
+    text-align:center;
+    font-size:16pt;
+    font-weight:bold;
+    margin:8px 0 0 0;
+    padding-bottom:0;
+    border-bottom:1px solid #000;
+    display:inline-block;
+    line-height:1;
+}
+/* ================================
+   TABEL INFO ATAS (FIX FINAL)
+================================ */
+.tabel-info{
+    border-collapse:collapse;
+    margin-top:15px;
+    width:auto;
+}
+
+.tabel-info td{
+    border:none;
+    padding:4px 0;
+    font-size:12pt;
+}
+
+/* Kolom Label */
+.tabel-info td:first-child{
+    width:220px;   /* KONTROL POSISI TITIK */
+    white-space:nowrap;
+}
+
+/* Kolom Titik Dua */
+.tabel-info td:nth-child(2){
+    width:15px;
+    text-align:center;
+    font-weight:bold;
+}
+
+/* Kolom Isi */
+.tabel-info td:nth-child(3){
+    padding-left:5px; /* KONTROL JARAK ISI */
+}
+/* ================================
+   INPUT & SELECT
+================================ */
+input, select{
+    font-family:Arial, sans-serif;
+    font-size:12pt;
+    height:24px;
+    padding:2px 5px;
+    border:none;
+    width:100%;
+
+}
+/* KHUSUS tabel-info supaya tidak full */
+.tabel-info input,
+.tabel-info select{
+    width:auto;
+}
+.select-flat{
+    background:transparent;
+    outline:none;
+}
+
+/* ================================
+   TEKS BARANG
+================================ */
+.teks-barang{
+    margin:10px 0 5px 0;
+}
+
+/* ================================
+   TABEL BARANG
+================================ */
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12pt;
+}
+
+#barangTable th,
+#barangTable td{
+    border:1px solid #000;
+    padding:4px;
+    font-size:11pt;
+}
+
+th{
+    font-weight:normal;
+}
+
+#barangTable td:nth-child(4){
+    text-align:center;
+}
+
+#barangTable td:nth-child(5){
+    text-transform:uppercase;
+}
+
+/* ================================
+   TANGGAL
+================================ */
+#tanggalInput{
+    font-size:12pt;
+    border:none;
+    width:130px;
+}
+
+.ttd-container > div{
+    width:32%;
+    text-align:center;
+}
+
+.ttd-title{
+    margin-bottom:5px;
+}
+
+.ttd-box{
+    height:140px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    position:relative;
+}
+.ttd-img{
+    width:150px;
+    height:75px;
+    object-fit:contain;
+}
+.ttd-line{
+    border-top:1px solid #000;
+    width:160px;
+    margin-top:4px;   /* jarak dari nama */
+}
+
+
+.ttd-label{
+    font-size:12pt;
+    margin-top:0px;      /* jarak dari TTD */
+    margin-bottom:0px;   /* jarak ke garis */
+    line-height:1.1;
+}
+
+/* Nama PT lebih kecil & rapi */
+#namaPenerima{
+    font-size:10pt !important;
+    font-weight:500 !important;
+}
+
+/* Canvas tanpa garis */
+canvas{
+    border:none !important;
+    width:150px !important;
+    height:70px !important;
+}
+
+/* ================================
+   TABEL BAWAH
+================================ */
+.tabel-bawah{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+.tabel-bawah td{
+    border:none;
+    padding:3px 4px;
+    font-weight:400;
+}
+
+.tabel-bawah td:first-child{
+    width:100px;
+}
+
+.tabel-bawah td:nth-child(2){
+    width:15px;
+    text-align:center;
+}
+
+/* ================================
+   BUTTON
+================================ */
+button{
+    padding:6px 15px;
+    font-size:12pt;
+    cursor:pointer;
+}
+
+/* ================================
+   PRINT HIDE
+================================ */
+.hide-before-print{
+    display:none !important;
+}
+
+#barangTable{
+    page-break-inside:auto;
+}
+
+.ttd-container{
+    page-break-inside:avoid;
+}
+
+.tabel-bawah{
+    page-break-inside:avoid;
+}
+.keterangan{
+    height:55px;          /* sama dengan tinggi logo */
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+/* Pastikan tabel-info tidak ikut aturan table global */
+.tabel-info{
+    width:auto;
+}
+/* Samakan posisi isi kolom ke-3 */
+.tabel-info td:nth-child(3){
+    padding-left:0ch;
+}
+
+/* Hilangkan offset bawaan select & input */
+.tabel-info select,
+.tabel-info input{
+    margin:0;
+    padding-left:0;
+}
+
+.tabel-info td:nth-child(3){
+    padding-left:8px;
+}
+
+.tabel-info td:nth-child(3) > *{
+    margin-left:5px;
+}
+.ttd-container{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;   /* UBAH */
+    margin-top:20px;
+}
+.ttd-img,
+canvas{
+    width:150px;
+    height:80px;
+    object-fit:contain;
+    margin-bottom:2px;   /* lebih rapat */
+}
+
+.ttd-label{
+    margin:2px 0 2px 0;   /* atas kanan bawah kiri */
+}
+#nipKepala{
+    font-size:20px;
+    margin-top:4px;  /* jarak dari garis */
+}
+@media print {
+    body{
+        background:#fff;
+    }
+
+    .paper{
+        margin:0 !important;
+        padding-top:0 !important;
+    }
+}
+
+*{
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+</style>
+</head>
+<body>
+
+<div class="paper" id="printArea">
+
+<div class="header">
+    
+    <div class="logo-title">
+        <img src="pln.ico">
+        <div class="title-text">
+            <b>PT PLN (Persero) UID Jawa Barat</b><br>
+            <b>UP3 PURWAKARTA</b><br>
+            <b>ULP PURWAKARTA KOTA</b>
+        </div>
+    </div>
+
+    <div class="keterangan">
+    <table class="tabel-ket">
+        <tr>
+            <td class="kolom-kiri">Putih</td>
+            <td class="kolon">:</td>
+            <td>Penerima Barang</td>
+        </tr>
+        <tr>
+            <td class="kolom-kiri">Putih</td>
+            <td class="kolon">:</td>
+            <td>Satpam</td>
+        </tr>
+        <tr>
+            <td class="kolom-kiri">Putih</td>
+            <td class="kolon">:</td>
+            <td>Arsip</td>
+        </tr>
+    </table>
+    <div class="garis-kecil"></div>
+</div>
+
+</div>
+
+<div style="text-align:center;">
+    <div class="judul">SURAT JALAN BARANG</div>
+</div>
+
+
+<table class="tabel-info">
+<tr>
+<td class="label">Diberikan Kepada</td>
+<td class="colon">:</td>
+<td>
+<select id="selectPenerima" class="select-flat" onchange="pilihPenerimaManual(this)">
+<option value="" disabled selected>Pilih</option>
+<option value="manual">Input Manual</option>
+<option>PT MITRA PUTRA ENG</option>
+<option>PT GLOBAL PRIMA LISTRINDO</option>
+<option>PT ADAM SUKSES MANDIRI</option>
+<option>PT SINAR MUSTIKA SAKTI</option>
+</select>
+
+<input type="text" id="inputPenerima"
+placeholder="Ketik penerima..."
+style="display:none;">
+</td>
+</tr>
+
+<tr>
+<td class="label">Berdasarkan Kode 6/7 No</td>
+<td class="colon">:</td>
+<td><input></td>
+</tr>
+
+<tr>
+<td class="label">Untuk Pekerjaan Proyek</td>
+<td class="colon">:</td>
+<td>
+<select id="selectProyek" class="select-flat" onchange="pilihProyekManual(this)">
+<option value="" disabled selected>Pilih</option>
+<option value="manual">Input Manual</option>
+<option>GANTI KWH METER</option>
+<option>GANTI PEMBATAS ARUS</option>
+<option>PASANG BARU</option>
+<option>PERUBAHAN DAYA</option>
+</select>
+
+<input type="text" id="inputProyek"
+placeholder="Ketik pekerjaan..."
+style="display:none;">
+</td>
+</tr>
+
+<tr>
+<td class="label">Lokasi</td>
+<td class="colon">:</td>
+<td>
+<select id="selectLokasi" onchange="pilihLokasiManual(this)">
+<option value="" disabled selected>Pilih</option>
+<option value="manual">Input Manual</option>
+<option>ULP PURWAKARTA KOTA</option>
+</select>
+
+<input type="text" id="inputLokasi"
+placeholder="Ketik lokasi..."
+style="display:none;">
+</td>
+</tr>
+</table>
+
+<div class="teks-barang">
+Barang-barang milik PT PLN (Persero), sebagai berikut :
+</div>
+
+
+<table id="barangTable">
+<thead>
+<tr>
+   <th rowspan="2" width="35">No</th>
+   <th rowspan="2">Nama Barang</th>
+   <th rowspan="2" width="50">Satuan</th>
+   <th colspan="2" width="140">Jumlah</th>
+ 
+</tr>
+<tr>
+    <th width="55">Angka</th>
+    <th width="125">Huruf</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<button onclick="tambahBaris()" class="no-print">Tambah Barang</button>
+
+   <!-- TANGGAL -->
+<div style="display:flex; justify-content:flex-end; font-size:15px; margin-top:15px; margin-bottom:15px;">
+    
+    <span id="tanggalCetak" style="display:none;"></span>
+
+    <input type="date" id="tanggalInput" 
+        style="border:none; font-size:16px; width:150px;">
+</div>
+<!-- CONTAINER TTD -->
+<div class="ttd-container">
+
+    <!-- YANG MENERIMA -->
+    <div>
+        <div class="ttd-title">Yang Menerima</div>
+        <div class="ttd-box">
+            <img id="imgPenerima" class="ttd-img">
+            <div id="namaPenerima" class="ttd-label"></div>
+            <div class="ttd-line"></div>
+            
+
+            <select id="pilihPenerima" 
+                class="no-print" 
+                onchange="updateTTDPenerima()"
+                style="margin-top:8px; font-size:13px;">
+                <option value="">Pilih</option>
+                <option value="1" data-nama="PT MITRA PUTRA ENG">PT MITRA PUTRA ENG</option>
+                <option value="2" data-nama="PT GLOBAL PRIMA LISTRINDO">PT GLOBAL PRIMA LISTRINDO</option>
+                <option value="3" data-nama="PT ADAM SUKSES MANDIRI">PT ADAM SUKSES MANDIRI</option>
+                <option value="4" data-nama="PT SINAR MUSTIKA SAKTI">PT SINAR MUSTIKA SAKTI</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- SECURITY -->
+    <div>
+        <div class="ttd-title">Security</div>
+        <div class="ttd-box">
+
+            <div style="height:80px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="ttdSecurity" style="width:150px; height:80px;"></canvas>
+
+                <img id="imgSecurityAuto"
+                    src="security.jpeg"
+                    style="display:none; width:150px; height:80px; object-fit:contain;">
+            </div>
+            <div id="namaSecurity" class="ttd-label" style="display:none;"></div>
+<div class="ttd-line"></div>
+
+<!-- Input nama manual -->
+<input type="text"
+       id="inputNamaSecurity"
+       class="no-print"
+       placeholder="Ketik Nama Security"
+       style="margin-top:6px; font-size:12px; text-align:center; display:none;"
+       oninput="updateNamaManualSecurity()">
+
+<div class="no-print" style="margin-top:6px; text-align:center;">
+    <select id="modeSecurity" onchange="gantiModeSecurity()" style="font-size:13px;">
+        <option value="manual">Manual</option>
+        <option value="auto">Otomatis</option>
+        <option value="hapus">Hapus</option>
+    </select>
+</div>
+        </div>
+    </div>
+
+    <!-- KEPALA GUDANG -->
+    <div>
+        <div class="ttd-title">Kepala Gudang</div>
+        <div class="ttd-box">
+
+    <img id="imgKepala" class="ttd-img" style="visibility:hidden;">
+
+    <div id="namaKepala" class="ttd-label" style="visibility:hidden;">
+        Gilang Dila Putra
+    </div>
+
+    <div class="ttd-line"></div>
+
+    <div id="nipKepala" style="font-size:14px; margin-top:2px; visibility:hidden;">
+        NIP : 92162551ZY
+    </div>
+
+</div>
+    </div>
+
+</div>
+
+<table class="tabel-bawah">
+<tr>
+    <td class="label">Kendaraan</td>
+    <td class="colon">:</td>
+    <td><input></td>
+</tr>
+
+<tr>
+    <td class="label">No. Pol</td>
+    <td class="colon">:</td>
+    <td><input></td>
+</tr>
+
+<tr>
+    <td class="label">Pengemudi</td>
+    <td class="colon">:</td>
+    <td><input></td>
+</tr>
+</table>
+<!-- TAMBAHKAN DI SINI -->
+<div style="text-align:right; margin-top:40px;">
+    <button onclick="downloadPDF()" class="no-print">
+        Download PDF
+    </button>
+</div>
+
+</div> <!-- tutup .paper -->
+<script>
+
+const masterBarang=[
+{name:"MTR kWH E 3P 230/400V 5-80A 4W", satuan:"BH"},
+{name:"MTR kWH E-PR 1P 230V 5-60A 2W", satuan:"BH"},
+{name:"MTR kWH E-PR 3P 230/400V 5-80A 4W", satuan:"BH"},
+{name:"MTR kWH E 1P 230V 5-60A 2W", satuan:"BH"},
+{name:"MCB 230/400V 1P 2A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 4A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 6A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 10A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 16A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 20A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 25A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 35A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 1P 50A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 3P 10A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 3P 16A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 3P 20A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 3P 25A 50Hz", satuan:"BH"},
+{name:"MCB 230/400V 3P 35A 50Hz", satuan:"BH"},
+{name:"MTR ACC SEGEL PLASTIC", satuan:"BH"},
+{name:"MTR ACC SEGEL PUTAR PLASTIC", satuan:"BH"},
+{name:"COND ACC JOINT SLEEVE AL 70mm2", satuan:"BH"},
+{name:"CABLE PWR NFA2X 2X10mm2 0.6/1kV OH", satuan:"M"},
+{name:"CABLE PWR NFA2X 4X16mm2 0.6/1kV OH", satuan:"M"},
+{name:"CABLE PWR ACC DEAD END ASSY FIXED 70mm", satuan:"SET"},
+{name:"CABLE PWR ACC WEDGE CLAMP 2x(6-16)mm", satuan:"BH"},
+{name:"CABLE PWR ACC STRAIN HOOK EKOR BABI 1.5", satuan:"BH"}
+];
+
+function tambahBaris(){
+let tbody=document.querySelector("#barangTable tbody");
+let row=tbody.insertRow();
+let no=tbody.rows.length;
+
+row.innerHTML=`
+<td>${no}</td>
+
+<td>
+<select class="select-flat" onchange="pilihBarang(this)">
+<option value="">Pilih Barang</option>
+<option value="manual">Input Manual</option>
+${masterBarang.map(b=>`<option data-satuan="${b.satuan}">${b.name}</option>`).join("")}
+</select>
+
+<input type="text" placeholder="Ketik nama barang..."
+style="display:none; margin-top:3px;">
+</td>
+
+<td><input></td>
+
+<td><input type="number" min="0" step="1" oninput="isiHuruf(this)"></td>
+
+<td><input readonly></td>
+`;
+}
+
+function isiSatuan(el){
+let satuan=el.options[el.selectedIndex].dataset.satuan;
+el.parentElement.nextElementSibling.firstElementChild.value=satuan;
+}
+
+function pilihBarang(select){
+
+    let td = select.parentElement;
+    let inputManual = td.querySelector("input[type='text']");
+    let satuanInput = td.nextElementSibling.querySelector("input");
+
+    if(select.value === "manual"){
+
+        // Sembunyikan dropdown
+        select.style.display = "none";
+
+        // Tampilkan input manual kosong
+        inputManual.style.display = "block";
+        inputManual.value = "";
+        inputManual.focus();
+
+        // Satuan ikut manual
+        satuanInput.removeAttribute("readonly");
+        satuanInput.value = "";
+
+    }else{
+
+        // Mode otomatis
+        inputManual.style.display = "none";
+        select.style.display = "block";
+
+        let satuan = select.options[select.selectedIndex].dataset.satuan;
+
+        satuanInput.value = satuan || "";
+        satuanInput.setAttribute("readonly", true);
+    }
+}
+
+function terbilang(n){
+const a=["","Satu","Dua","Tiga","Empat","Lima","Enam","Tujuh","Delapan","Sembilan","Sepuluh","Sebelas"];
+if(n<12)return a[n];
+if(n<20)return terbilang(n-10)+" Belas";
+if(n<100)return terbilang(Math.floor(n/10))+" Puluh "+terbilang(n%10);
+if(n<200)return "Seratus "+terbilang(n-100);
+if(n<1000)return terbilang(Math.floor(n/100))+" Ratus "+terbilang(n%100);
+return n;
+}
+
+function isiHuruf(el){
+    let angka=parseInt(el.value);
+    if(!angka){
+        el.parentElement.nextElementSibling.firstElementChild.value="";
+        return;
+    }
+
+    el.parentElement.nextElementSibling.firstElementChild.value=
+        terbilang(angka).toUpperCase();
+}
+
+function downloadPDF(){
+
+document.querySelectorAll(".no-print").forEach(el=>{
+el.classList.add("hide-before-print");
+});
+
+const element = document.getElementById("printArea");
+
+// ===== AMBIL TANGGAL & JAM SEKARANG =====
+const now = new Date();
+
+const tanggal = String(now.getDate()).padStart(2,'0');
+const bulan   = String(now.getMonth()+1).padStart(2,'0');
+const tahun   = now.getFullYear();
+const jam     = String(now.getHours()).padStart(2,'0');
+const menit   = String(now.getMinutes()).padStart(2,'0');
+
+const namaFile = `Surat_Jalan_PLN_${tanggal}-${bulan}-${tahun}_${jam}-${menit}.pdf`;
+
+const opt={
+margin:0,
+filename:namaFile,
+image:{type:'jpeg',quality:1},
+html2canvas:{
+    scale:2,
+    scrollY:0
+},
+jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+};
+
+html2pdf().set(opt).from(element).save().then(()=>{
+document.querySelectorAll(".no-print").forEach(el=>{
+el.classList.remove("hide-before-print");
+});
+});
+}
+
+/* =========================
+   PERBAIKAN YANG DIMINTA
+========================= */
+
+function updateTTDPenerima(){
+    const select = document.getElementById("pilihPenerima");
+    const selectedText = select.options[select.selectedIndex].text;
+
+    const mapping = {
+        "PT MITRA PUTRA ENG": "yangmenerima1.jpeg",
+        "PT GLOBAL PRIMA LISTRINDO": "pt_global.png",
+        "PT ADAM SUKSES MANDIRI": "adam.png",
+        "PT SINAR MUSTIKA SAKTI": "ttd_sinar_mustika.png"
+    };
+
+    document.getElementById("imgPenerima").src = mapping[selectedText] || "";
+    document.getElementById("namaPenerima").innerText = selectedText;
+}
+
+function cekValidasiKepala(){
+let tanggal=document.getElementById("tanggalInput").value;
+let rows=document.querySelectorAll("#barangTable tbody tr");
+if(rows.length===0)return false;
+
+let validBarang=false;
+rows.forEach(row=>{
+let select = row.cells[1].querySelector("select");
+let inputManual = row.cells[1].querySelector("input[type='text']");
+
+let nama = select.style.display === "none"
+    ? inputManual.value
+    : select.value;
+let jumlah=row.cells[3].querySelector("input").value;
+if(nama&&jumlah){validBarang=true;}
+});
+
+return tanggal&&validBarang;
+}
+
+function updateTTDKepala(){
+
+    const img  = document.getElementById("imgKepala");
+    const nama = document.getElementById("namaKepala");
+    const nip  = document.getElementById("nipKepala");
+
+    if(cekValidasiKepala()){
+
+        img.src = "kepalagudang.png";
+
+        img.style.visibility  = "visible";
+        nama.style.visibility = "visible";
+        nip.style.visibility  = "visible";
+
+    }else{
+
+        img.src = "";
+
+        img.style.visibility  = "hidden";
+        nama.style.visibility = "hidden";
+        nip.style.visibility  = "hidden";
+    }
+}
+
+document.getElementById("tanggalInput")
+    .addEventListener("change", updateTTDKepala);
+
+document.querySelector("#barangTable")
+    .addEventListener("input", updateTTDKepala);
+
+function formatTanggalIndo(tanggal){
+    const bulanIndo = [
+        "Januari","Februari","Maret","April","Mei","Juni",
+        "Juli","Agustus","September","Oktober","November","Desember"
+    ];
+    const d = new Date(tanggal);
+
+    return "Purwakarta, " +
+        d.getDate()+" "+
+        bulanIndo[d.getMonth()]+" "+
+        d.getFullYear();
+}
+
+document.getElementById("tanggalInput").addEventListener("change",function(){
+
+    const teks = formatTanggalIndo(this.value);
+
+    document.getElementById("tanggalCetak").innerText = teks;
+    document.getElementById("tanggalCetak").style.display = "inline";
+
+    this.style.display = "none"; // sembunyikan input
+});
+
+tambahBaris();
+
+/* ===== SECURITY SIGNATURE ===== */
+
+const canvasSecurity = document.getElementById("ttdSecurity");
+const signatureSecurity = new SignaturePad(canvasSecurity,{
+    backgroundColor:'rgba(0,0,0,0)',
+    penColor:'black'
+});
+
+function resizeCanvasSecurity(){
+    const ratio=Math.max(window.devicePixelRatio||1,1);
+    canvasSecurity.width=canvasSecurity.offsetWidth*ratio;
+    canvasSecurity.height=canvasSecurity.offsetHeight*ratio;
+    canvasSecurity.getContext("2d").scale(ratio,ratio);
+    signatureSecurity.clear();
+}
+
+window.addEventListener("resize",resizeCanvasSecurity);
+resizeCanvasSecurity();
+function gantiModeSecurity(){
+    const mode = document.getElementById("modeSecurity").value;
+    const canvas = document.getElementById("ttdSecurity");
+    const imgAuto = document.getElementById("imgSecurityAuto");
+    const nama = document.getElementById("namaSecurity");
+    const inputManual = document.getElementById("inputNamaSecurity");
+
+    if(mode === "auto"){
+
+        canvas.style.display = "none";
+        imgAuto.style.display = "block";
+
+        nama.style.display = "block";
+        nama.innerText = "Security";
+
+        inputManual.style.display = "none";
+        inputManual.value = "";
+
+        signatureSecurity.clear();
+
+    }else if(mode === "manual"){
+
+        canvas.style.display = "block";
+        imgAuto.style.display = "none";
+
+        nama.style.display = "block";
+        inputManual.style.display = "block";
+
+        nama.innerText = inputManual.value;
+
+    }else if(mode === "hapus"){
+
+        canvas.style.display = "none";
+        imgAuto.style.display = "none";
+
+        nama.style.display = "none";
+        inputManual.style.display = "none";
+        inputManual.value = "";
+
+        signatureSecurity.clear();
+    }
+}
+function updateNamaManualSecurity(){
+    const input = document.getElementById("inputNamaSecurity").value;
+    document.getElementById("namaSecurity").innerText = input;
+}
+signatureSecurity.onEnd = function () {
+    if(!signatureSecurity.isEmpty()){
+        document.getElementById("namaSecurity").style.display = "block";
+    }
+};
+
+document.addEventListener("keydown", function(e){
+
+    // Hanya berlaku untuk input type number
+    if(e.target.type === "number"){
+
+        if(e.key === "-" || e.key === "e"){
+            e.preventDefault();
+        }
+
+    }
+
+});
+gantiModeSecurity();
+function pilihPenerimaManual(select){
+    const input = document.getElementById("inputPenerima");
+
+    if(select.value === "manual"){
+        select.style.display = "none";
+        input.style.display = "inline-block";
+        input.focus();
+    }
+}
+
+function pilihProyekManual(select){
+    const input = document.getElementById("inputProyek");
+
+    if(select.value === "manual"){
+        select.style.display = "none";
+        input.style.display = "inline-block";
+        input.focus();
+    }
+}
+
+function pilihLokasiManual(select){
+    const input = document.getElementById("inputLokasi");
+
+    if(select.value === "manual"){
+        select.style.display = "none";
+        input.style.display = "inline-block";
+        input.focus();
+    }
+}
+</script>
+
+</body>
+</html>
